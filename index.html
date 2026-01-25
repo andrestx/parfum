@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chimia Parfumurilor | O Călătorie Olfactivă</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #d4af37; /* Auriu */
+            --secondary: #a4508b; /* Violet gradient start */
+            --tertiary: #5f0a87; /* Violet gradient end */
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-color: #f0f0f0;
+            --text-muted: #cccccc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: radial-gradient(circle at center, #1a0b2e 0%, #000000 100%);
+            color: var(--text-color);
+            font-family: 'Lato', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* Canvas pentru fundalul cu molecule */
+        #molecular-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .presentation-container {
+            display: flex;
+            height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* --- Sidebar Modernizat --- */
+        .sidebar {
+            width: 100px;
+            background: rgba(10, 10, 10, 0.4);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-right: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 0;
+            z-index: 20;
+            box-shadow: 5px 0 30px rgba(0,0,0,0.5);
+        }
+        
+        .progress-line {
+            position: absolute;
+            left: 50%;
+            top: 10%;
+            bottom: 10%;
+            width: 1px;
+            background: rgba(255,255,255,0.1);
+            transform: translateX(-50%);
+            z-index: -1;
+        }
+
+        .slide-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            margin: 15px 0;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid transparent;
+            position: relative;
+        }
+        
+        .slide-indicator::after {
+            content: attr(data-slide-num);
+            position: absolute;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%) translateX(-10px);
+            opacity: 0;
+            font-size: 0.8rem;
+            color: var(--primary);
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .slide-indicator:hover::after {
+            opacity: 1;
+            transform: translateY(-50%) translateX(0);
+        }
+
+        .slide-indicator.active {
+            background: var(--primary);
+            box-shadow: 0 0 15px var(--primary);
+            transform: scale(1.5);
+        }
+
+        /* --- Container Slide-uri --- */
+        .slides-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            perspective: 1000px;
+        }
+        
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 4rem 6rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transform: scale(0.9) translateY(30px);
+            filter: blur(10px);
+        }
+        
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateY(0);
+            filter: blur(0);
+            z-index: 2;
+        }
+        
+        .slide.exit {
+            opacity: 0;
+            transform: scale(1.1) translateY(-30px);
+            filter: blur(5px);
+            z-index: 1;
+            transition: all 0.6s ease-in;
+        }
+
+        /* --- Elemente Text --- */
+        .slide-header-group {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .slide-header-group::after {
+            content: '';
+            display: block;
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), transparent);
+            margin-top: 15px;
+            border-radius: 2px;
+        }
+
+        .slide-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 4rem;
+            color: #fff;
+            line-height: 1.1;
+            margin-bottom: 10px;
+            text-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            background: linear-gradient(to right, #fff, #d4af37);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .slide-subtitle {
+            font-size: 1.4rem;
+            color: var(--primary);
+            font-weight: 300;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        .content-wrapper {
+            display: flex;
+            gap: 50px;
+            align-items: center;
+            height: 100%;
+        }
+
+        .text-column {
+            flex: 1;
+        }
+
+        .visual-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .slide-content {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+        
+        /* Highlight Box stilizat */
+        .highlight-box {
+            background: rgba(212, 175, 55, 0.1);
+            border-left: 4px solid var(--primary);
+            padding: 20px 25px;
+            border-radius: 0 10px 10px 0;
+            margin-top: 20px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            font-size: 1.1rem;
+        }
+        
+        .highlight-box strong {
+            color: #fff;
+        }
+
+        /* --- Carduri Molecule 3D --- */
+        .chemical-grid {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+            perspective: 1000px;
+        }
+        
+        .molecule-card {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 25px;
+            width: 280px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: transform 0.1s ease, box-shadow 0.3s ease;
+            transform-style: preserve-3d;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .molecule-card:hover {
+            box-shadow: 0 20px 40px rgba(212, 175, 55, 0.2);
+        }
+
+        .molecule-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .molecule-name {
+            color: var(--primary);
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+        
+        .molecule-formula {
+            font-family: 'Courier New', monospace;
+            background: rgba(0,0,0,0.3);
+            padding: 5px 10px;
+            border-radius: 4px;
+            text-align: center;
+            margin: 10px auto;
+            display: table;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .molecule-details {
+            font-size: 0.9rem;
+            color: #ddd;
+            text-align: center;
+            margin-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 10px;
+        }
+
+        /* --- Container Imagini (Placeholder Logic) --- */
+        .image-container {
+            width: 100%;
+            max-width: 450px;
+            height: 300px;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease;
+        }
+
+        .image-container:hover {
+            transform: scale(1.02);
+        }
+
+        .image-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        /* Simulare imagine pentru demo */
+        .demo-img-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0.5;
+            color: var(--primary);
+        }
+        .demo-img-content i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        /* --- Navigație --- */
+        .nav-container {
+            position: absolute;
+            bottom: 50px;
+            right: 80px;
+            display: flex;
+            gap: 20px;
+            z-index: 100;
+        }
+        
+        .nav-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        
+        .nav-btn:hover {
+            background: var(--primary);
+            color: #000;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3);
+        }
+
+        /* --- Animații Secvențiale (Stagger) --- */
+        .anim-element {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+
+        .slide.active .anim-element {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .slide.active .anim-element:nth-child(1) { transition-delay: 0.2s; }
+        .slide.active .anim-element:nth-child(2) { transition-delay: 0.3s; }
+        .slide.active .anim-element:nth-child(3) { transition-delay: 0.4s; }
+        .slide.active .anim-element:nth-child(4) { transition-delay: 0.5s; }
+        .slide.active .anim-element:nth-child(5) { transition-delay: 0.6s; }
+
+        /* --- Responsive --- */
+        @media (max-width: 1024px) {
+            .slide { padding: 2rem 3rem; }
+            .content-wrapper { flex-direction: column; overflow-y: auto; }
+            .slide-title { font-size: 2.5rem; }
+            .sidebar { width: 60px; }
+            .nav-container { bottom: 20px; right: 20px; }
+            .image-container { height: 200px; }
+        }
+    </style>
+</head>
+<body>
+    
+    <canvas id="molecular-canvas"></canvas>
+
+    <div class="presentation-container">
+        
+        <div class="sidebar">
+            <div class="progress-line"></div>
+            <div class="slide-indicator active" data-slide="0" data-slide-num="1"></div>
+            <div class="slide-indicator" data-slide="1" data-slide-num="2"></div>
+            <div class="slide-indicator" data-slide="2" data-slide-num="3"></div>
+            <div class="slide-indicator" data-slide="3" data-slide-num="4"></div>
+            <div class="slide-indicator" data-slide="4" data-slide-num="5"></div>
+            <div class="slide-indicator" data-slide="5" data-slide-num="6"></div>
+            <div class="slide-indicator" data-slide="6" data-slide-num="7"></div>
+            <div class="slide-indicator" data-slide="7" data-slide-num="8"></div>
+        </div>
+        
+        <div class="slides-container">
+            
+            <div class="slide active">
+                <div class="content-wrapper">
+                    <div class="text-column">
+                        <div class="slide-header-group anim-element">
+                            <p class="slide-subtitle">Introducere</p>
+                            <h1 class="slide-title">Chimia Parfumurilor</h1>
+                        </div>
+                        <p class="slide-content anim-element">
+                            Parfumul nu este doar un miros, ci o compoziție arhitecturală de molecule. Este o artă invizibilă guvernată de legile chimiei organice, unde volatilitatea și structura moleculară dictează emoția.
+                        </p>
+                        
+                        <div class="highlight-box anim-element">
+                            <strong>Știați că?</strong> <br>
+                            Un singur parfum poate conține peste 100 de molecule diferite, fiecare cu propriul său ritm de evaporare.
+                        </div>
+                    </div>
+                    
+                    <div class="visual-column anim-element">
+                        <div class="chemical-grid">
+                            <div class="molecule-card tilt-card">
+                                <div class="molecule-name">Vanilina</div>
+                                <div class="molecule-formula">C<sub>8</sub>H<sub>8</sub>O<sub>3</sub></div>
+                                <div class="molecule-details">
+                                    <i class="fas fa-cookie-bite"></i> Dulce, cald, persistent.<br>
+                                    Punct de fierbere: 285°C
+                                </div>
+                            </div>
+                            <div class="molecule-card tilt-card">
+                                <div class="molecule-name">Limonen</div>
+                                <div class="molecule-formula">C<sub>10</sub>H<sub>16</sub></div>
+                                <div class="molecule-details">
+                                    <i class="fas fa-lemon"></i> Proaspăt, citric, volatil.<br>
+                                    Punct de fierbere: 176°C
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide">
+                <div class="content-wrapper">
+                    <div class="text-column">
+                        <div class="slide-header-group anim-element">
+                            <p class="slide-subtitle">Structura</p>
+                            <h1 class="slide-title">Piramida Olfactivă</h1>
+                        </div>
+                        <p class="slide-content anim-element">
+                            Secretul unui parfum constă în <strong>volatilitatea diferențiată</strong>. Moleculele ușoare se evaporă instantaneu, în timp ce cele grele rămân pe piele ore în șir.
+                        </p>
+                        
+                        <div class="highlight-box anim-element">
+                            <ul style="list-style: none;">
+                                <li style="margin-bottom: 10px"><i class="fas fa-wind" style="color:var(--primary)"></i> <strong>Vârf:</strong> Citrice, Alchene (5-15 min)</li>
+                                <li style="margin-bottom: 10px"><i class="fas fa-heart" style="color:var(--primary)"></i> <strong>Inimă:</strong> Florale, Aldehide (2-4 ore)</li>
+                                <li><i class="fas fa-anchor" style="color:var(--primary)"></i> <strong>Bază:</strong> Lemn, Vanilie, Mosc (>4 ore)</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="visual-column anim-element">
+                         <div class="image-container">
+                            
+                            <div class="image-overlay">Piramida notelor: Vârf, Inimă, Bază</div>
+                            <div class="demo-img-content" style="position: absolute; z-index: -1;">
+                                <i class="fas fa-layer-group"></i>
+                                <span>Piramida Olfactivă</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide">
+                <div class="content-wrapper">
+                    <div class="text-column">
+                        <div class="slide-header-group anim-element">
+                            <p class="slide-subtitle">Chimie Organică</p>
+                            <h1 class="slide-title">Inele Aromatice</h1>
+                        </div>
+                        <p class="slide-content anim-element">
+                            Termenul "aromatic" în chimie provine chiar de la mirosul acestor compuși. <strong>Arenele</strong> (compușii cu inel benzenic) sunt coloana vertebrală a multor esențe naturale și sintetice.
+                        </p>
+                        <p class="slide-content anim-element">
+                            Sistemul de electroni π delocalizați conferă stabilitate, dar structura generală permite interacțiunea specifică cu receptorii din nas.
+                        </p>
+                    </div>
+                    
+                    <div class="visual-column anim-element">
+                        <div class="chemical-grid">
+                            <div class="molecule-card tilt-card">
+                                <div class="molecule-name">Cinamaldehida</div>
+                                <div class="molecule-formula">C<sub>9</sub>H<sub>8</sub>O</div>
+                                <div class="molecule-details">
+                                    Miros de scorțișoară.<br>
+                                    Conține inel benzenic + aldehidă nesaturată.
+                                </div>
+                            </div>
+                        </div>
+                         <div class="image-container" style="margin-top: 20px; height: 150px;">
+                            
+                            <div class="demo-img-content" style="position: absolute; z-index: -1;">
+                                <i class="fas fa-dna"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide">
+                <div class="content-wrapper">
+                    <div class="text-column">
+                        <div class="slide-header-group anim-element">
+                            <p class="slide-subtitle">Natura la lucru</p>
+                            <h1 class="slide-title">Terpenele</h1>
+                        </div>
+                        <p class="slide-content anim-element">
+                            Sunt hidrocarburi naturale construite din unități de <strong>izopren (C<sub>5</sub>H<sub>8</sub>)</strong>. Plantele le produc pentru a atrage polenizatori sau a respinge dăunători.
+                        </p>
+                        <div class="highlight-box anim-element">
+                            <strong>Clasificare:</strong>
+                            Monoterpene (C10) - foarte volatile (ex: uleiuri citrice).<br>
+                            Sesquiterpene (C15) - mai grele, fixatori de miros.
+                        </div>
+                    </div>
+                    
+                    <div class="visual-column anim-element">
+                        <div class="chemical-grid">
+                            <div class="molecule-card tilt-card">
+                                <div class="molecule-name">Linalool</div>
+                                <div class="molecule-formula">C<sub>10</sub>H<sub>18</sub>O</div>
+                                <div class="molecule-details">
+                                    Alcool terpenic.<br>
+                                    Component principal în Lavandă și Bergamotă.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+             <div class="slide">
+                <div class="content-wrapper">
+                    <div class="text-column">
+                        <div class="slide-header-group anim-element">
+                            <p class="slide-subtitle">Proprietăți Fizice</p>
+                            <h1 class="slide-title">Polaritatea & Volatilitatea</h1>
+                        </div>
+                        <p class="slide-content anim-element">
+                            De ce mirosul de trandafir (alcooli) persistă mai mult decât cel de lămâie (hidrocarburi)? Răspunsul stă în <strong>legăturile de hidrogen</strong>.
+                        </p>
+                        <p class="slide-content anim-element">
+                            Moleculele polare (cu grupări -OH, -CHO) se "țin" mai strâns una de alta, având puncte de fierbere mai mari. Cele nepolare se evaporă ușor.
+                        </p>
+                    </div>
+                    
+                    <div class="visual-column anim-element">
+                         <div class="image-container">
+                             
+                             <div class="image-overlay">Legături de Hidrogen vs Forțe Van der Waals</div>
+                            <div class="demo-img-content" style="position: absolute; z-index: -1;">
+                                <i class="fas fa-magnet"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide">
+                <div class="content-wrapper">
+                    <div class="text-column">
+                        <div class="slide-header-group anim-element">
+                            <p class="slide-subtitle">Evoluție</p>
+                            <h1 class="slide-title">Revoluția Sintetică</h1>
+                        </div>
+                        <p class="slide-content anim-element">
+                            Până în secolul XIX, parfumurile erau 100% naturale și extrem de scumpe. Chimia organică a democratizat luxul.
+                        </p>
+                        <div class="highlight-box anim-element">
+                            <strong>1868:</strong> Sinteza Cumarinei (miros de fân proaspăt).<br>
+                            <strong>1874:</strong> Sinteza Vanilinei din lemn.<br>
+                            <strong>Azi:</strong> molecule precum <em>Calone</em> (miros de briză marină) nu există în natură, fiind create exclusiv în laborator.
+                        </div>
+                    </div>
+                    
+                    <div class="visual-column anim-element">
+                        <div class="chemical-grid">
+                            <div class="molecule-card tilt-card" style="border-color: var(--primary);">
+                                <div class="molecule-name">Cumarina</div>
+                                <div class="molecule-formula">C<sub>9</sub>H<sub>6</sub>O<sub>2</sub></div>
+                                <div class="molecule-details">
+                                    Primul miros sintetic.<br>
+                                    Cheia parfumului "Fougère Royale" (1882).
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide">
+                <div class="content-wrapper">
+                    <div class="text-column">
+                        <div class="slide-header-group anim-element">
+                            <p class="slide-subtitle">Stereochimie</p>
+                            <h1 class="slide-title">Forma Contează</h1>
+                        </div>
+                        <p class="slide-content anim-element">
+                            Receptorii noștri olfactivi sunt ca niște "broaște" la o ușă. Doar "cheia" (molecula) cu forma perfectă poate deschide mirosul.
+                        </p>
+                        <p class="slide-content anim-element">
+                            <strong>Izomeria optică (Chiralitatea):</strong> Doi compuși identici ca formulă, dar imagine în oglindă unul față de altul, pot mirosi complet diferit.
+                        </p>
+                    </div>
+                    
+                    <div class="visual-column anim-element">
+                        <div class="highlight-box" style="background: rgba(164, 80, 139, 0.2); border-left-color: var(--secondary);">
+                            <strong>Exemplul Carvonei:</strong><br>
+                            <span style="color:var(--primary)">(R)-Carvona:</span> Miros de Mentă<br>
+                            <span style="color:var(--secondary)">(S)-Carvona:</span> Miros de Chimen
+                        </div>
+                        <div class="image-container" style="margin-top:20px;">
+                            
+                             <div class="image-overlay">Izomeri R și S</div>
+                            <div class="demo-img-content" style="position: absolute; z-index: -1;">
+                                <i class="fas fa-hand-paper"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide">
+                <div class="content-wrapper">
+                    <div class="text-column">
+                        <div class="slide-header-group anim-element">
+                            <p class="slide-subtitle">Sinteză</p>
+                            <h1 class="slide-title">Concluzii</h1>
+                        </div>
+                        <p class="slide-content anim-element">
+                            Parfumeria este punctul de întâlnire dintre <strong>precizia chimică</strong> și <strong>emoția artistică</strong>.
+                        </p>
+                        <div class="highlight-box anim-element">
+                            Chimia ne învață cum să extragem, să sintetizăm și să stabilizăm aromele, dar creativitatea umană este cea care le combină în capodopere.
+                        </div>
+                        <p class="slide-content anim-element" style="margin-top: 20px;">
+                            Fie că vorbim de aldehide, esteri sau terpene, fiecare moleculă este o notă într-o simfonie invizibilă.
+                        </p>
+                    </div>
+                    
+                    <div class="visual-column anim-element">
+                        <div class="image-container" style="height: 350px;">
+                            
+                            <div class="demo-img-content" style="position: absolute; z-index: -1;">
+                                <i class="fas fa-magic"></i>
+                                <span style="margin-top: 10px; font-family: 'Playfair Display'">Fin</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="nav-container">
+            <div class="nav-btn" id="prev-btn"><i class="fas fa-chevron-left"></i></div>
+            <div class="nav-btn" id="next-btn"><i class="fas fa-chevron-right"></i></div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. CONFIGURARE CANVAS (Background Dinamic) ---
+        const canvas = document.getElementById('molecular-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let particles = [];
+        
+        // Resize
+        function resizeCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Particle Class
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 2 + 1;
+                this.opacity = Math.random() * 0.5 + 0.1;
+            }
+            
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                // Bounce edges
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+            }
+            
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(212, 175, 55, ${this.opacity})`; // Gold color
+                ctx.fill();
+            }
+        }
+
+        // Init Particles
+        for (let i = 0; i < 80; i++) {
+            particles.push(new Particle());
+        }
+
+        // Animation Loop
+        function animateParticles() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // Draw connections
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                
+                for (let j = i; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 150) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(164, 80, 139, ${0.15 - distance/1000})`; // Violet connection
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+
+        // --- 2. LOGICA SLIDE-URILOR ---
+        const slides = document.querySelectorAll('.slide');
+        const indicators = document.querySelectorAll('.slide-indicator');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        
+        let currentSlide = 0;
+        let isAnimating = false; // Prevent spam clicking
+
+        function updateSlides(index, direction) {
+            if (isAnimating) return;
+            isAnimating = true;
+
+            // Remove active class from current
+            const outgoingSlide = slides[currentSlide];
+            outgoingSlide.classList.remove('active');
+            outgoingSlide.classList.add('exit');
+            
+            // Update Indicators
+            indicators[currentSlide].classList.remove('active');
+            currentSlide = index;
+            indicators[currentSlide].classList.add('active');
+
+            // Handle incoming slide
+            const incomingSlide = slides[currentSlide];
+            
+            // Reset state for incoming slide before animating
+            incomingSlide.classList.remove('exit');
+            
+            // Wait slightly for exit animation to start visually
+            setTimeout(() => {
+                incomingSlide.classList.add('active');
+                
+                // Cleanup after animation finishes
+                setTimeout(() => {
+                    outgoingSlide.classList.remove('exit');
+                    isAnimating = false;
+                }, 800); // Matches CSS transition duration
+            }, 50);
+        }
+
+        function nextSlide() {
+            let nextIndex = currentSlide + 1;
+            if (nextIndex >= slides.length) nextIndex = 0;
+            updateSlides(nextIndex, 'next');
+        }
+
+        function prevSlide() {
+            let prevIndex = currentSlide - 1;
+            if (prevIndex < 0) prevIndex = slides.length - 1;
+            updateSlides(prevIndex, 'prev');
+        }
+
+        nextBtn.addEventListener('click', nextSlide);
+        prevBtn.addEventListener('click', prevSlide);
+        
+        indicators.forEach((ind, i) => {
+            ind.addEventListener('click', () => {
+                if (i !== currentSlide) updateSlides(i);
+            });
+        });
+
+        // Keyboard Nav
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+
+        // --- 3. EFECT TILT 3D PE CARDURI ---
+        const cards = document.querySelectorAll('.tilt-card');
+
+        cards.forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = ((y - centerY) / centerY) * -10; // Max rotation deg
+                const rotateY = ((x - centerX) / centerX) * 10;
+                
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = `perspective(1000px) rotateX(0) rotateY(0) scale(1)`;
+            });
+        });
+
+    </script>
+</body>
+</html>
