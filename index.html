@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chimia Parfumurilor - Prezentare</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        body {
+            background: #0a0a0a;
+            color: #f0f0f0;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .presentation-container {
+            display: flex;
+            height: 100vh;
+            position: relative;
+        }
+        
+        /* Sidebar cu slide indicatori */
+        .sidebar {
+            width: 80px;
+            background: rgba(20, 20, 20, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 30px;
+            border-right: 1px solid rgba(255, 215, 0, 0.2);
+            z-index: 10;
+        }
+        
+        .slide-indicator {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+            border: 1px solid transparent;
+        }
+        
+        .slide-indicator.active {
+            background: rgba(255, 215, 0, 0.2);
+            color: #ffd700;
+            border: 1px solid rgba(255, 215, 0, 0.5);
+            transform: scale(1.1);
+        }
+        
+        /* Slide-urile principale */
+        .slides-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.8s cubic-bezier(0.77, 0, 0.175, 1);
+            z-index: 1;
+        }
+        
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+            z-index: 2;
+        }
+        
+        .slide.exit {
+            opacity: 0;
+            transform: translateX(-100%);
+        }
+        
+        /* Stilizare slide-uri */
+        .slide-title {
+            font-size: 3.5rem;
+            margin-bottom: 30px;
+            color: #ffd700;
+            font-weight: 300;
+            letter-spacing: 2px;
+            line-height: 1.2;
+            max-width: 80%;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s forwards 0.3s;
+        }
+        
+        .slide-subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #aaa;
+            font-weight: 300;
+            max-width: 70%;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s forwards 0.5s;
+        }
+        
+        .slide-content {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            max-width: 70%;
+            margin-bottom: 40px;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s forwards 0.7s;
+        }
+        
+        .slide-content.highlight {
+            color: #ffd700;
+            font-size: 1.3rem;
+            font-weight: 500;
+            border-left: 3px solid #ffd700;
+            padding-left: 20px;
+            margin-top: 20px;
+        }
+        
+        .image-placeholder {
+            width: 300px;
+            height: 200px;
+            background: rgba(255, 215, 0, 0.05);
+            border: 2px dashed rgba(255, 215, 0, 0.3);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 215, 0, 0.5);
+            margin: 20px 0;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s forwards 0.9s;
+        }
+        
+        .image-placeholder i {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .image-placeholder span {
+            font-size: 0.9rem;
+        }
+        
+        /* Structuri chimice */
+        .chemical-structures {
+            display: flex;
+            gap: 30px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .molecule {
+            background: rgba(30, 30, 30, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            width: 250px;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        
+        .molecule-name {
+            color: #ffd700;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .molecule-formula {
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 15px;
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px;
+            border-radius: 5px;
+        }
+        
+        .molecule-properties {
+            font-size: 0.9rem;
+            color: #aaa;
+            line-height: 1.5;
+        }
+        
+        /* Navigație */
+        .navigation {
+            position: absolute;
+            bottom: 40px;
+            right: 50px;
+            display: flex;
+            gap: 20px;
+            z-index: 100;
+        }
+        
+        .nav-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            color: #ffd700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.5rem;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255, 215, 0, 0.2);
+            transform: scale(1.1);
+        }
+        
+        .slide-counter {
+            position: absolute;
+            bottom: 40px;
+            left: 50px;
+            font-size: 1.2rem;
+            color: #aaa;
+        }
+        
+        /* Animații */
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .floating {
+            animation: float 5s ease-in-out infinite;
+        }
+        
+        /* Efecte decorative */
+        .decoration {
+            position: absolute;
+            opacity: 0.05;
+            z-index: 0;
+        }
+        
+        .atom {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #ffd700;
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        /* Slide specific styling */
+        .slide-1 {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+        }
+        
+        .slide-2 {
+            background: linear-gradient(135deg, #0a0a0a 0%, #151515 100%);
+        }
+        
+        .slide-3 {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+        }
+        
+        .slide-4 {
+            background: linear-gradient(135deg, #0a0a0a 0%, #151515 100%);
+        }
+        
+        .slide-5 {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+        }
+        
+        .slide-6 {
+            background: linear-gradient(135deg, #0a0a0a 0%, #151515 100%);
+        }
+        
+        .slide-7 {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+        }
+        
+        .slide-8 {
+            background: linear-gradient(135deg, #0a0a0a 0%, #151515 100%);
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .slide-title {
+                font-size: 2.8rem;
+            }
+            
+            .slide-content, .slide-subtitle {
+                max-width: 90%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+            }
+            
+            .slide {
+                padding: 30px;
+            }
+            
+            .slide-title {
+                font-size: 2.2rem;
+                max-width: 100%;
+            }
+            
+            .slide-subtitle {
+                font-size: 1.2rem;
+                max-width: 100%;
+            }
+            
+            .slide-content {
+                font-size: 1rem;
+                max-width: 100%;
+            }
+            
+            .chemical-structures {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .molecule {
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .navigation {
+                bottom: 20px;
+                right: 30px;
+            }
+            
+            .nav-btn {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .slide-counter {
+                bottom: 20px;
+                left: 30px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <!-- Sidebar cu indicatori slide -->
+        <div class="sidebar">
+            <div class="slide-indicator active" data-slide="0">1</div>
+            <div class="slide-indicator" data-slide="1">2</div>
+            <div class="slide-indicator" data-slide="2">3</div>
+            <div class="slide-indicator" data-slide="3">4</div>
+            <div class="slide-indicator" data-slide="4">5</div>
+            <div class="slide-indicator" data-slide="5">6</div>
+            <div class="slide-indicator" data-slide="6">7</div>
+            <div class="slide-indicator" data-slide="7">8</div>
+        </div>
+        
+        <!-- Container pentru slide-uri -->
+        <div class="slides-container">
+            <!-- Slide 1 -->
+            <div class="slide active slide-1">
+                <h1 class="slide-title">Chimia Parfumurilor</h1>
+                <p class="slide-subtitle">O călătorie prin moleculele care definesc mirosurile</p>
+                <p class="slide-content">Parfumurile sunt combinații complexe de molecule organice volatile. Fiecare notă parfumată are originea în structuri chimice specifice care interacționează cu receptorii olfactivi.</p>
+                
+                <div class="chemical-structures">
+                    <div class="molecule floating" style="animation-delay: 0.2s;">
+                        <div class="molecule-name">Vanilina</div>
+                        <div class="molecule-formula">C₈H₈O₃</div>
+                        <div class="molecule-properties">Notă de bază persistentă, miros dulce de vanilie, punct de fierbere ridicat (≈285°C)</div>
+                    </div>
+                    
+                    <div class="molecule floating" style="animation-delay: 0.6s;">
+                        <div class="molecule-name">Limonen</div>
+                        <div class="molecule-formula">C₁₀H₁₆</div>
+                        <div class="molecule-properties">Notă de vârf, miros citric, volatil, punct de fierbere moderat (~176°C)</div>
+                    </div>
+                </div>
+                
+                <!-- Spațiu pentru poză -->
+                <div class="image-placeholder">
+                    <i class="fas fa-flask"></i>
+                    <span>POZĂ: Structuri chimice ale vanilinei și limonenului</span>
+                </div>
+            </div>
+            
+            <!-- Slide 2 -->
+            <div class="slide slide-2">
+                <h1 class="slide-title">Notele Parfumate</h1>
+                <p class="slide-subtitle">Volatilitatea și timpul de evoluție</p>
+                <p class="slide-content">Diferențele de volatilitate dintre molecule creează note parfumate succesive. Moleculele volatile dau notele de vârf, cele de volatilitate medie notele de inimă, iar moleculele grele notele de bază persistente.</p>
+                
+                <div class="slide-content highlight">
+                    Notele de vârf: volatile (salbatice, citrice)<br>
+                    Notele de inimă: volatilitate medie (florale, picante)<br>
+                    Notele de bază: grele/polarizate (lemnoase, mușcate)
+                </div>
+                
+                <!-- Spațiu pentru poză -->
+                <div class="image-placeholder">
+                    <i class="fas fa-chart-line"></i>
+                    <span>POZĂ: Diagramă cu evoluția notelor parfumate în timp</span>
+                </div>
+            </div>
+            
+            <!-- Slide 3 -->
+            <div class="slide slide-3">
+                <h1 class="slide-title">Molecule Aromatice</h1>
+                <p class="slide-subtitle">Arenele - baza multor mirosuri</p>
+                <p class="slide-content">Mirosurile parfumate provin în principal din compuși organici care conțin inele aromatice. Mulți compuși cu inel benzilic au miros puternic și persistent.</p>
+                
+                <div class="chemical-structures">
+                    <div class="molecule floating" style="animation-delay: 0.2s;">
+                        <div class="molecule-name">Cumarina</div>
+                        <div class="molecule-formula">C₉H₆O₂</div>
+                        <div class="molecule-properties">Primul parfum sintetizat în laborator (1868), miros dulceag, vanilat, notă de bază</div>
+                    </div>
+                    
+                    <div class="molecule floating" style="animation-delay: 0.6s;">
+                        <div class="molecule-name">Cinamaldehidă</div>
+                        <div class="molecule-formula">C₉H₈O</div>
+                        <div class="molecule-properties">Aroma caracteristică de scorțișoară, sistem conjugat -CH=CH–CHO</div>
+                    </div>
+                </div>
+                
+                <!-- Spațiu pentru poză -->
+                <div class="image-placeholder">
+                    <i class="fas fa-atom"></i>
+                    <span>POZĂ: Modele moleculare ale cumarinei și cinamaldehidei</span>
+                </div>
+            </div>
+            
+            <!-- Slide 4 -->
+            <div class="slide slide-4">
+                <h1 class="slide-title">Terpenele</h1>
+                <p class="slide-subtitle">Hidrocarburi nesaturate din plante</p>
+                <p class="slide-content">Terpenele sunt alcătuite din unități C₅ (izopren) și intră des în componența uleiurilor volatile ale plantelor. Sunt responsabile pentru multe mirosuri florale sau citrice.</p>
+                
+                <div class="chemical-structures">
+                    <div class="molecule floating" style="animation-delay: 0.2s;">
+                        <div class="molecule-name">Linalool</div>
+                        <div class="molecule-formula">C₁₀H₁₈O</div>
+                        <div class="molecule-properties">Miroasă floral, cu caracter condimentat, prezent în lavandă, coriandru, notă de inimă</div>
+                    </div>
+                    
+                    <div class="molecule floating" style="animation-delay: 0.6s;">
+                        <div class="molecule-name">Mircena</div>
+                        <div class="molecule-formula">C₁₀H₁₆</div>
+                        <div class="molecule-properties">Aroma picantă, balsamică, de cuișoare, găsită în hamei, salvie, busuioc</div>
+                    </div>
+                </div>
+                
+                <!-- Spațiu pentru poză -->
+                <div class="image-placeholder">
+                    <i class="fas fa-leaf"></i>
+                    <span>POZĂ: Plante care conțin terpene (lavandă, lămâi, busuioc)</span>
+                </div>
+            </div>
+            
+            <!-- Slide 5 -->
+            <div class="slide slide-5">
+                <h1 class="slide-title">Polaritatea Moleculelor</h1>
+                <p class="slide-subtitle">Cum influențează volatilitatea</p>
+                <p class="slide-content">Grupările polare (–OH, –CHO, –COOH) cresc forțele de asociere între molecule (legături de hidrogen), făcând substanța mai puțin volatilă. Moleculele nepolare se evaporă mai ușor.</p>
+                
+                <div class="slide-content highlight">
+                    Linalool (cu -OH): punct de fierbere ~198°C, mai puțin volatil<br>
+                    Limonen (nepolar): punct de fierbere ~176°C, se evaporă ușor<br>
+                    Vanilina (polară): punct de fierbere ~285°C, persistă ca notă de bază
+                </div>
+                
+                <!-- Spațiu pentru poză -->
+                <div class="image-placeholder">
+                    <i class="fas fa-magnet"></i>
+                    <span>POZĂ: Diagramă cu legături de hidrogen în molecule polare</span>
+                </div>
+            </div>
+            
+            <!-- Slide 6 -->
+            <div class="slide slide-6">
+                <h1 class="slide-title">Istoria Parfumurilor</h1>
+                <p class="slide-subtitle">De la uleiuri esențiale la sinteză</p>
+                <p class="slide-content">Începând cu acum 5000 de ani, oamenii foloseau uleiuri esențiale. Chimia a revoluționat parfumeria în secolul al XIX-lea, odată cu primele compuși sintetici.</p>
+                
+                <div class="slide-content">
+                    <ul style="margin-left: 20px; margin-top: 20px;">
+                        <li>1868: Cumarina - primul compus sintetic (Perkin)</li>
+                        <li>1874: Vanilina izolată ca parfum</li>
+                        <li>Astăzi: Majoritatea vanilinei este sintetizată industrial din guaiacol sau lignină</li>
+                        <li>Parfumul modern: amestec de substanțe naturale și sintetice</li>
+                    </ul>
+                </div>
+                
+                <!-- Spațiu pentru poză -->
+                <div class="image-placeholder">
+                    <i class="fas fa-history"></i>
+                    <span>POZĂ: Ilustrație istorică a distilării uleiurilor esențiale</span>
+                </div>
+            </div>
+            
+            <!-- Slide 7 -->
+            <div class="slide slide-7">
+                <h1 class="slide-title">Forma Tridimensională</h1>
+                <p class="slide-subtitle">Izomeria și percepția olfactivă</p>
+                <p class="slide-content">Moleculele odorante trebuie să se potrivească precis pe receptorii olfactivi. Chiar și mici diferențe de orientare spațială (izomeri) pot produce senzații olfactive diferite.</p>
+                
+                <div class="slide-content highlight">
+                    "Cheia în broască": forma 3D a moleculei determină interacțiunea cu receptorii<br>
+                    Izomerii pot avea mirosuri complet diferite<br>
+                    Sistemele conjugate influențează intensitatea mirosului
+                </div>
+                
+                <!-- Spațiu pentru poză -->
+                <div class="image-placeholder">
+                    <i class="fas fa-cube"></i>
+                    <span>POZĂ: Modele 3D ale izomerilor cu mirosuri diferite</span>
+                </div>
+            </div>
+            
+            <!-- Slide 8 -->
+            <div class="slide slide-8">
+                <h1 class="slide-title">Știință și Artă</h1>
+                <p class="slide-subtitle">Concluzii</p>
+                <p class="slide-content">Parfumurile reprezintă o îmbinare armonioasă între știință și artă, în care chimia organică are un rol esențial. Studiul lor ajută la înțelegerea importanței compușilor organici în viața cotidiană.</p>
+                
+                <div class="slide-content highlight" style="margin-top: 30px;">
+                    Fiecare miros plăcut este rezultatul interacțiunii dintre structura chimică a unor compuși organici și sistemul olfactiv uman.
+                </div>
+                
+                <div class="slide-content" style="margin-top: 30px;">
+                    <strong>Clasele de compuși și rolul lor:</strong><br>
+                    • Arene: note intense, calde și persistente<br>
+                    • Terpene: mirosuri proaspete, citrice sau florale<br>
+                    • Alchene: volatile, note de vârf<br>
+                    • Alcooli: influențează volatilitatea prin polaritate
+                </div>
+                
+                <!-- Spațiu pentru poză -->
+                <div class="image-placeholder" style="margin-top: 30px;">
+                    <i class="fas fa-glass-whiskey"></i>
+                    <span>POZĂ: Flacoane elegante de parfum</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigație -->
+        <div class="navigation">
+            <div class="nav-btn" id="prev-btn">
+                <i class="fas fa-chevron-left"></i>
+            </div>
+            <div class="nav-btn" id="next-btn">
+                <i class="fas fa-chevron-right"></i>
+            </div>
+        </div>
+        
+        <!-- Contor slide -->
+        <div class="slide-counter">
+            <span id="current-slide">1</span> / <span id="total-slides">8</span>
+        </div>
+    </div>
+    
+    <!-- Efecte decorative - atomi -->
+    <div class="decoration">
+        <!-- Atomii vor fi generați prin JavaScript -->
+    </div>
+
+    <script>
+        // Configurare prezentare
+        const slides = document.querySelectorAll('.slide');
+        const indicators = document.querySelectorAll('.slide-indicator');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const currentSlideElement = document.getElementById('current-slide');
+        const totalSlidesElement = document.getElementById('total-slides');
+        const decorationContainer = document.querySelector('.decoration');
+        
+        let currentSlide = 0;
+        const totalSlides = slides.length;
+        
+        // Setează numărul total de slide-uri
+        totalSlidesElement.textContent = totalSlides;
+        
+        // Inițializare atomi decorative
+        function createDecorationAtoms() {
+            const atomCount = 15;
+            
+            for (let i = 0; i < atomCount; i++) {
+                const atom = document.createElement('div');
+                atom.classList.add('atom');
+                
+                // Poziție aleatoare
+                const left = Math.random() * 100;
+                const top = Math.random() * 100;
+                const size = Math.random() * 6 + 4;
+                const delay = Math.random() * 5;
+                const duration = Math.random() * 4 + 4;
+                
+                atom.style.left = `${left}%`;
+                atom.style.top = `${top}%`;
+                atom.style.width = `${size}px`;
+                atom.style.height = `${size}px`;
+                atom.style.animationDelay = `${delay}s`;
+                atom.style.animationDuration = `${duration}s`;
+                
+                decorationContainer.appendChild(atom);
+            }
+        }
+        
+        // Funcție pentru schimbarea slide-ului
+        function goToSlide(n) {
+            // Verifică limitele
+            if (n < 0) n = totalSlides - 1;
+            if (n >= totalSlides) n = 0;
+            
+            // Actualizează indicatorul activ
+            indicators[currentSlide].classList.remove('active');
+            indicators[n].classList.add('active');
+            
+            // Ieșire slide curent
+            slides[currentSlide].classList.remove('active');
+            slides[currentSlide].classList.add('exit');
+            
+            // Animație intrare slide nou
+            setTimeout(() => {
+                slides[currentSlide].classList.remove('exit');
+                slides[n].classList.add('active');
+                
+                // Resetează animațiile pentru conținutul slide-ului nou
+                const title = slides[n].querySelector('.slide-title');
+                const subtitle = slides[n].querySelector('.slide-subtitle');
+                const content = slides[n].querySelectorAll('.slide-content');
+                const placeholders = slides[n].querySelectorAll('.image-placeholder');
+                const molecules = slides[n].querySelectorAll('.molecule');
+                
+                // Resetează animațiile
+                if (title) {
+                    title.style.animation = 'none';
+                    setTimeout(() => {
+                        title.style.animation = 'fadeInUp 0.8s forwards 0.3s';
+                    }, 10);
+                }
+                
+                if (subtitle) {
+                    subtitle.style.animation = 'none';
+                    setTimeout(() => {
+                        subtitle.style.animation = 'fadeInUp 0.8s forwards 0.5s';
+                    }, 10);
+                }
+                
+                content.forEach((el, i) => {
+                    el.style.animation = 'none';
+                    setTimeout(() => {
+                        el.style.animation = `fadeInUp 0.8s forwards ${0.7 + i * 0.1}s`;
+                    }, 10);
+                });
+                
+                placeholders.forEach((el, i) => {
+                    el.style.animation = 'none';
+                    setTimeout(() => {
+                        el.style.animation = `fadeInUp 0.8s forwards ${0.9 + i * 0.1}s`;
+                    }, 10);
+                });
+                
+                molecules.forEach((el, i) => {
+                    el.style.animation = 'none';
+                    setTimeout(() => {
+                        el.style.animation = `fadeInUp 0.8s forwards ${0.2 + i * 0.2}s, float 5s ease-in-out infinite`;
+                        el.style.animationDelay = `${0.2 + i * 0.2}s, 0s`;
+                    }, 10);
+                });
+                
+                // Actualizează slide-ul curent
+                currentSlide = n;
+                currentSlideElement.textContent = currentSlide + 1;
+            }, 400);
+        }
+        
+        // Evenimente pentru butoanele de navigare
+        prevBtn.addEventListener('click', () => {
+            goToSlide(currentSlide - 1);
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            goToSlide(currentSlide + 1);
+        });
+        
+        // Evenimente pentru indicatori
+        indicators.forEach((indicator, index) => {
+            indicator.addEventListener('click', () => {
+                if (index !== currentSlide) {
+                    goToSlide(index);
+                }
+            });
+        });
+        
+        // Navigare cu taste
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                goToSlide(currentSlide - 1);
+            } else if (e.key === 'ArrowRight' || e.key === ' ') {
+                goToSlide(currentSlide + 1);
+            }
+        });
+        
+        // Inițializare
+        createDecorationAtoms();
+        
+        // Animație pentru molecule în primul slide
+        document.querySelectorAll('.molecule').forEach((el, i) => {
+            el.style.animation = `fadeInUp 0.8s forwards ${0.2 + i * 0.2}s, float 5s ease-in-out infinite`;
+            el.style.animationDelay = `${0.2 + i * 0.2}s, 0s`;
+        });
+    </script>
+</body>
+</html>
