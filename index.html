@@ -236,6 +236,22 @@
         .highlight-box strong {
             color: #fff;
         }
+      
+      /* Highlight Box stilizat */
+       .obs-box {
+    background: rgba(180, 0, 0, 0.12);      /* fundal roșu soft */
+    border-left: 4px solid #b40000;         /* roșu burgundy */
+    padding: 20px 25px;
+    border-radius: 0 10px 10px 0;
+    margin-top: 20px;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 5px 15px rgba(180, 0, 0, 0.25);
+    font-size: 1.1rem;
+     }
+        
+        .obs-box strong {
+            color: #fff;
+        }
 
         /* --- Carduri Molecule 3D --- */
         .chemical-grid {
@@ -304,21 +320,32 @@
         }
 
         /* --- Container Imagini (Placeholder Logic) --- */
-        .image-container {
-            width: 100%;
-            max-width: 450px;
-            height: 300px;
-            border-radius: 20px;
-            overflow: hidden;
-            position: relative;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(0,0,0,0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.3s ease;
-        }
+        /* Modifică în secțiunea CSS existentă */
+
+.image-container {
+    width: 100%;
+    max-width: 450px;
+    height: 300px;
+    border-radius: 20px;
+    overflow: hidden; /* Păstrează aceasta pentru border-radius */
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+}
+
+/* Adaugă această regulă pentru imagine */
+.demo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Schimbă din 'cover' în 'contain' */
+    object-position: center;
+    display: block;
+}_
 
         .image-container:hover {
             transform: scale(1.02);
@@ -565,18 +592,67 @@
                             <p class="slide-subtitle">Introducere</p>
                             <h1 class="slide-title">Chimia Parfumurilor</h1>
                         </div>
+                      
+                      <div class="highlight-box anim-element">
+                            <strong>Descoperire</strong> <br>
+                        Descoperirea parfumului se datorează unei <b>intamplări;</b> De aceea, latinescul <i>per fumum=prin fum</I> formează baza etimologică a cuvantului parfum. Abia incepand cu secolul al <b>XVIII</b>-lea el este identificat cu mirosul plăcut.
+                        </div>
+                      <br>
                         <p class="slide-content anim-element">
-                            Parfumul nu este doar un miros, ci o compoziție arhitecturală de molecule. Este o artă invizibilă guvernată de legile chimiei organice, unde volatilitatea și structura moleculară dictează emoția.
+                          Pentru a fi mirosita o <b>substanta</b> trebuie sa fie <i>volatila si solubila</i> in apa.
                         </p>
                         
-                        <div class="highlight-box anim-element">
-                            <strong>Știați că?</strong> <br>
-                            Un singur parfum poate conține peste 100 de molecule diferite, fiecare cu propriul său ritm de evaporare.
+                      <div class="obs-box anim-element">
+                            <strong>Observatie!</strong> <br>
+                        Molecule insolubile în apă ➔ Nu ajung la receptori ➔ <b> LIPSA MIROSULUI</b>
                         </div>
+                      <br>
+                        <div class="highlight-box anim-element">
+                            <strong>Stiati ca?</strong> <br>
+                            La începutul istoriei sale, parfumul intra în ocupaţiile <b><i>preoţilor</i></b> şi nu ale
+femeilor. Această activitate era considerată un dar al zeilor.
+                        </div>
+                      <br><br>
+                      <p class="slide-content anim-element">
+                        <i>Mirosul placut</i> esete generat de catre moleculele numite generic <b>esente</b>. Esenţele se extrag prin antrenare cu vapori, macerare la cald sau extracție cu solvenți, din diferite părți ale plantelor.
+                      </p>
+                      
+                      <div class="obs-box anim-element">
+                        <strong><b>Diferenta de volatilitate </b></strong> <br>
+                        Cele mai volatile ➔ notele de vârf<br>
+                        Cele de volatilitate medie ➔ notele placute<br>
+                        Moleculele grele sau polarizate ➔ notele de bază persistente
+                        </div>
+                      <br>
                     </div>
                     
                     <div class="visual-column anim-element">
                         <div class="chemical-grid">
+                          <div class="molecule-card tilt-card">
+                                <div class="molecule-name">Limonen</div>
+                                <div class="molecule-formula">C<sub>10</sub>H<sub>16</sub></div>
+                                <div class="molecule-details">
+                                    <i class="fas fa-lemon"></i> Proaspăt, citric, volatil.<br>
+                                    Punct de fierbere: 176°C
+                                </div>
+                            </div>
+                          <div class="visual-column anim-element">
+<div class="image-container">
+<img
+src="../1.png"
+alt="Structura moleculară a limonenului"
+class="demo-img"
+>
+  <img
+src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Limonene-3D-balls.png/630px-Limonene-3D-balls.png"
+alt="Structura moleculară a limonenului"
+class="demo-img"
+>
+<div class="image-overlay">Piramida notelor: Vârf, Inimă, Bază</div>
+</div>
+</div>
+                          
+                          
                             <div class="molecule-card tilt-card">
                                 <div class="molecule-name">Vanilina</div>
                                 <div class="molecule-formula">C<sub>8</sub>H<sub>8</sub>O<sub>3</sub></div>
